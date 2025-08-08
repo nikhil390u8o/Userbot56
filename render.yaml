@@ -3,6 +3,6 @@ services:
     name: userbot
     runtime: python
     build:
-      pythonVersion: 3.10.12
+      pythonVersion: 3.11.9
     buildCommand: ""
     startCommand: python main.py
