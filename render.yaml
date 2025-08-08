@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: userbot
+    runtime: python
+    build:
+      pythonVersion: 3.10.12
+    buildCommand: ""
+    startCommand: python main.py
