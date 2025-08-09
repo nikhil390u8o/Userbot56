@@ -52,6 +52,7 @@ love_messages = [
 
 # ----------------- Telegram Handlers -----------------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print(f"📩 /start command received from {update.effective_user.id}")
     user_id = update.effective_user.id
     waiting_for_string.add(user_id)
 
