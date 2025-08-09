@@ -1,6 +1,5 @@
 import os
 import asyncio
-from aiohttp import web
 from dotenv import load_dotenv
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
@@ -219,6 +218,8 @@ async def receive_string(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await msg.edit_text(f"❌ Failed to start userbot: {e}")
 
 # ----------------- Keep-alive Web Server -----------------
+from aiohttp import web
+
 async def handle(request):
     return web.Response(text="Bot is alive!")
 
@@ -240,6 +241,7 @@ async def run_telegram_app():
     await app.initialize()
     await app.start()
     await app.updater.start_polling()
+    await app.updater.idle()
 
 async def main():
     await asyncio.gather(
