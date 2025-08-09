@@ -219,19 +219,17 @@ async def receive_string(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await msg.edit_text(f"❌ Failed to start userbot: {e}")
 
 # ----------------- Keep-alive Web Server -----------------
-async def handle_root(request):
-    return web.Response(text="OK - bot is alive")
+async def handle(request):
+    return web.Response(text="Bot is alive!")
 
 async def start_web_server():
     app = web.Application()
-    app.router.add_get("/", handle_root)
+    app.add_routes([web.get("/", handle)])
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", PORT)
+    site = web.TCPSite(runner, "0.0.0.0", int(os.environ.get("PORT", 8080)))
     await site.start()
-    print(f"✅ Keep-alive server started on port {PORT}")
 
-# ----------------- Telegram Bot -----------------
 async def run_telegram_app():
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
@@ -240,12 +238,11 @@ async def run_telegram_app():
     print("🤖 Starting Telegram bot...")
     await app.run_polling()
 
-# ----------------- Main -----------------
 async def main():
     await asyncio.gather(
         start_web_server(),
         run_telegram_app()
     )
 
-if __name__ == "__main__":
+if name == "main":
     asyncio.run(main())
