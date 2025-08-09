@@ -3,6 +3,7 @@ import asyncio
 import random
 import nest_asyncio
 from dotenv import load_dotenv
+from aiohttp import web  # <-- NEW: HTTP server for Render
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 
@@ -30,14 +31,12 @@ OWNER_ID = int(os.getenv("OWNER_ID"))
 SUPPORT_CHANNEL = os.getenv("SUPPORT_CHANNEL")
 SUPPORT_GROUP = os.getenv("SUPPORT_GROUP")
 OWNER_USERNAME = os.getenv("OWNER_USERNAME")
+PORT = int(os.environ.get("PORT", 10000))  # Port for Render
 
 userbots = {}
 waiting_for_string = set()
 
-# Empty list — you can fill with your own clean raid messages later
 raid_messages = []
-
-# Love messages (clean)
 love_messages = [
     "💖 Love is a journey, not a destination.",
     "💕 Every heartbeat whispers your name.",
@@ -45,7 +44,6 @@ love_messages = [
     "🌹 You light up my world like nobody else.",
 ]
 
-# /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     waiting_for_string.add(user_id)
@@ -63,7 +61,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
-# Telethon userbot handlers
 async def register_userbot_handlers(client, me):
     @client.on(events.NewMessage(pattern=r"\.ping"))
     async def ping(event):
@@ -110,7 +107,6 @@ async def register_userbot_handlers(client, me):
             text = love_messages[i % len(love_messages)]
             await event.respond(f"{mention}, {text}", parse_mode="html")
 
-# When user sends string
 async def receive_string(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     if user_id not in waiting_for_string:
@@ -144,7 +140,6 @@ async def receive_string(update: Update, context: ContextTypes.DEFAULT_TYPE):
         waiting_for_string.discard(user_id)
         await msg.edit_text(f"❌ Error: {e}")
 
-# Handle buttons
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -180,13 +175,32 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
-# Start the bot
-def main():
+# --- Bot runner ---
+async def run_bot():
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, receive_string))
     app.add_handler(CallbackQueryHandler(button_handler))
-    app.run_polling()
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling()
+    await asyncio.Event().wait()
+
+# --- HTTP server for Render ---
+async def handle(request):
+    return web.Response(text="Bot is running on Render free plan!")
+
+async def run_web():
+    server = web.Application()
+    server.router.add_get("/", handle)
+    runner = web.AppRunner(server)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", PORT)
+    await site.start()
+
+# --- Main entry ---
+async def main():
+    await asyncio.gather(run_bot(), run_web())
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
