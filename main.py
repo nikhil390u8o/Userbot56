@@ -244,5 +244,5 @@ async def main():
         run_telegram_app()
     )
 
-if name == "main":
+if __name__ == "__main__":
     asyncio.run(main())
