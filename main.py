@@ -236,7 +236,9 @@ async def run_telegram_app():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, receive_string))
     app.add_handler(CallbackQueryHandler(button_handler))
     print("🤖 Starting Telegram bot...")
-    await app.run_polling()
+    await app.initialize()
+await app.start()
+await app.updater.start_polling()
 
 async def main():
     await asyncio.gather(
